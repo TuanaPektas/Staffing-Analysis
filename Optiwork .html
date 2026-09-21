@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>OPTIWORK | Zaman Çizelgesi</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#f3f3f3; --panel:#ffffff; --ink:#262626; --ink-soft:#595959;
+    --header-bg:#262626; --header-ink:#ffffff;
+    --accent:#C00000; --accent-soft:#f2dede;
+    --subhead-bg:#f2f2f2; --border:#dcdcdc; --row-bg:#fafafa;
+    --ok-bg:#e6f4ea; --ok-ink:#1e7d34; --err-bg:#fdecea; --err-ink:#a4231a;
+    --input-bg:#ffffff; --input-border:#c9c9c9;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1b1b1d; --panel:#242426; --ink:#e8e8e8; --ink-soft:#a8a8a8;
+      --header-bg:#111112; --header-ink:#f2f2f2;
+      --accent:#e0574f; --accent-soft:#3a2323;
+      --subhead-bg:#2c2c2e; --border:#3a3a3c; --row-bg:#2a2a2c;
+      --ok-bg:#1c3a26; --ok-ink:#7ddb98; --err-bg:#3a2020; --err-ink:#f2938c;
+      --input-bg:#1f1f21; --input-border:#4a4a4c;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1b1b1d; --panel:#242426; --ink:#e8e8e8; --ink-soft:#a8a8a8;
+    --header-bg:#111112; --header-ink:#f2f2f2;
+    --accent:#e0574f; --accent-soft:#3a2323;
+    --subhead-bg:#2c2c2e; --border:#3a3a3c; --row-bg:#2a2a2c;
+    --ok-bg:#1c3a26; --ok-ink:#7ddb98; --err-bg:#3a2020; --err-ink:#f2938c;
+    --input-bg:#1f1f21; --input-border:#4a4a4c;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    font-size:13px; line-height:1.4;
+  }
+  .wrap{max-width:1400px; margin:0 auto; padding:14px;}
+  .titlebar{
+    background:var(--header-bg); color:var(--header-ink);
+    padding:10px 16px; font-weight:700; font-size:14px;
+    letter-spacing:.3px; display:flex; justify-content:space-between; align-items:center;
+    border-radius:3px; margin-bottom:12px; flex-wrap:wrap; gap:10px;
+  }
+  .attend-toggle{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .attend-toggle .q{font-size:11.5px; font-weight:600;}
+  .attend-toggle .btns{display:flex; gap:0; border:1px solid #555; border-radius:3px; overflow:hidden; font-size:12px;}
+  .attend-toggle button{
+    border:none; background:transparent; color:var(--header-ink); padding:5px 14px; cursor:pointer; font-weight:600;
+  }
+  .attend-toggle button.active{background:var(--accent); }
+  .date-pick{display:flex; align-items:center; gap:6px;}
+  .date-pick input[type="date"]{height:26px; border-radius:3px; border:1px solid #555; background:#1a1a1a; color:#fff; padding:0 6px; font-size:12px;}
+
+  .panel{background:var(--panel); border:1px solid var(--border); border-radius:3px; margin-bottom:12px; overflow:hidden;}
+  .subhead{
+    background:var(--subhead-bg); color:var(--accent); font-weight:700; font-size:11.5px;
+    padding:6px 12px; border-left:4px solid var(--accent); letter-spacing:.2px;
+  }
+  .subhead.tasks{background:var(--accent); color:#fff; border-left:none;}
+
+  .grid-auto{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:12px;}
+  @media(max-width:900px){.grid-auto{grid-template-columns:repeat(2,1fr);}}
+  .field-static label{display:block; font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.3px; margin-bottom:2px;}
+  .field-static .val{font-weight:600; font-size:13px;}
+  .field-static input[type="date"]{font-weight:600; font-size:13px; border:1px solid var(--input-border); border-radius:3px; padding:3px 6px; background:var(--input-bg); color:var(--ink);}
+
+  .time-row{display:flex; gap:14px; padding:12px; flex-wrap:wrap; align-items:flex-end;}
+  .time-field{display:flex; flex-direction:column; gap:3px;}
+  .time-field label{font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.3px;}
+  .metrics{display:flex; gap:22px; margin-left:auto; flex-wrap:wrap;}
+  .metric .lbl{font-size:10.5px; color:var(--ink-soft); text-transform:uppercase;}
+  .metric .num{font-size:16px; font-weight:700;}
+  .metric.warn .num{color:var(--accent);}
+
+  input[type="time"], input[type="text"], input[type="number"], input[type="date"], select{
+    background:var(--input-bg); color:var(--ink); border:1px solid var(--input-border);
+    border-radius:3px; padding:4px 6px; font-size:12.5px; height:28px; width:100%;
+  }
+  input[type="time"], input[type="date"]{width:auto;}
+
+  .task-hdr{
+    display:grid; grid-template-columns:1.6fr 2fr 2.4fr .9fr .8fr 1.1fr .4fr;
+    gap:8px; padding:0 10px; font-size:10.5px; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:.2px; margin-top:8px;
+  }
+  #tasksContainer{padding:0 10px 10px;}
+  .task-card{background:var(--row-bg); border:1px solid var(--border); border-radius:3px; padding:6px; margin-bottom:8px;}
+  .micro-row{
+    display:grid; grid-template-columns:1.6fr 2fr 2.4fr .9fr .8fr 1.1fr .4fr;
+    gap:8px; align-items:center; padding:3px 0;
+  }
+  .diger-input{margin-top:4px;}
+  .del-btn{
+    background:transparent; border:none; color:var(--accent); cursor:pointer; font-size:14px;
+    height:28px; width:100%; border-radius:3px;
+  }
+  .del-btn:hover{background:var(--accent-soft);}
+  .del-btn:disabled{opacity:.3; cursor:not-allowed;}
+  .task-actions{display:flex; align-items:center; gap:10px; margin-top:6px; flex-wrap:wrap;}
+  .btn{
+    border:1px solid var(--input-border); background:var(--panel); color:var(--ink);
+    padding:5px 12px; border-radius:3px; font-size:12px; cursor:pointer; font-weight:600;
+  }
+  .btn:hover{border-color:var(--accent); color:var(--accent);}
+  .btn.danger{color:var(--accent);}
+  .task-total{margin-left:auto; font-weight:700; font-size:12px;}
+  .task-total span{color:var(--accent);}
+
+  .add-task-bar{padding:10px;}
+  .btn.primary{background:var(--accent); color:#fff; border-color:var(--accent); padding:7px 16px;}
+  .btn.primary:hover{opacity:.9; color:#fff;}
+
+  .footer-row{display:flex; justify-content:flex-end; align-items:center; gap:20px; padding:12px; flex-wrap:wrap;}
+  .grand-total{font-size:15px; font-weight:700;}
+  .grand-total span{color:var(--accent);}
+
+  .banner{padding:9px 12px; border-radius:3px; font-size:12.5px; margin:0 12px 12px; font-weight:600;}
+  .banner.err{background:var(--err-bg); color:var(--err-ink);}
+  .banner.ok{background:var(--ok-bg); color:var(--ok-ink);}
+  .info-panel{padding:16px; font-size:13px; color:var(--ink-soft);}
+
+  table.hist{width:100%; border-collapse:collapse; font-size:12px;}
+  table.hist th{background:var(--accent); color:#fff; padding:5px 8px; text-align:left;}
+  table.hist td{padding:5px 8px; border-bottom:1px solid var(--border);}
+  table.hist tr:nth-child(even){background:var(--row-bg);}
+  .caption{font-size:11px; color:var(--ink-soft); padding:0 12px 10px;}
+  .row{display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; padding:12px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="titlebar">
+    <div>OPTIWORK | ÇALIŞAN GÜNLÜK MİKRO İŞ VE ZAMAN ÇİZELGESİ</div>
+    <div class="attend-toggle">
+      <div class="date-pick"><label class="q" style="color:#ccc;">Tarih</label><input type="date" id="tarihSecici"></div>
+      <span class="q" id="devamSorusu">Bugün çalıştınız mı?</span>
+      <div class="btns">
+        <button id="btnEvet" class="active">Evet, çalıştım</button>
+        <button id="btnHayir">Hayır, izinliyim</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="banner"></div>
+  <div id="mainArea"></div>
+
+  <div class="panel">
+    <div class="subhead">Toplu İzin / Devamsızlık Kaydı (Geçmişe Dönük)</div>
+    <div class="row">
+      <div class="time-field"><label>Başlangıç</label><input type="date" id="topluBas"></div>
+      <div class="time-field"><label>Bitiş</label><input type="date" id="topluBit"></div>
+      <button class="btn" id="btnTopluKaydet">Bu Aralığı "Gelmedi" Olarak Kaydet</button>
+    </div>
+    <div class="caption">Sadece hafta içi günler işaretlenir. Daha önce "çalıştım" olarak doldurup kaydettiğiniz günlerin üzerine yazılmaz; onları düzenlemek için aşağıdaki listeden ilgili tarihi açın.</div>
+  </div>
+
+  <div class="panel">
+    <div class="subhead">Geçmiş Kayıtlarım</div>
+    <div id="gecmisAlan" style="padding:8px 12px;"></div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- Sabit / otomatik profil verisi (ileride login/DB'den gelecek) ---------- */
+const PROFIL = {
+  adSoyad:"Selin Demir", mudurluk:"Çalışan Deneyimi / İş Gel.", yonetici:"Mehmet Öztürk",
+  yasAraligi:"25-29 Yaş", cinsiyet:"Kadın", kidem:"1-3 Yıl (Deneyimli)",
+  calismaModeli:"Ofis (Genel Müd.)", egitim:"Hayır (Aktif İş)"
+};
+
+const KATEGORILER = ["İşe Alım & Oryantasyon","Süreç & Sistem İyileştirme","İK Raporlama & Analitik","İletişim & Rutin Toplantılar","Diğer"];
+const DURUMLAR = ["TAMAMLANDI","%90 TAMAMLANDI","%80 TAMAMLANDI","%70 TAMAMLANDI","%60 TAMAMLANDI","%50 TAMAMLANDI","%40 TAMAMLANDI","%30 TAMAMLANDI","%20 TAMAMLANDI","%10 TAMAMLANDI"];
+const TIPLER = ["Otomatik","Manuel","Hibrit"];
+function durumYuzde(d){ return d === "TAMAMLANDI" ? 100 : parseInt(d.match(/\d+/)[0],10); }
+
+const uid = () => "id_" + Math.random().toString(36).slice(2,10);
+function yeniMikro(){ return {id:uid(), isim:"", tip:TIPLER[0], sure:0}; }
+function yeniAnaIs(){ return {id:uid(), kategori:KATEGORILER[0], katDiger:"", anaIs:"", durum:DURUMLAR[0], mikrolar:[yeniMikro()]}; }
+
+function pad2(n){ return String(n).padStart(2,"0"); }
+function bugunISO(){ const d=new Date(); return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+function trTarih(iso){ const [y,m,d]=iso.split("-"); return `${d}.${m}.${y}`; }
+function isoEkle(iso, gun){ const d=new Date(iso+"T00:00:00"); d.setDate(d.getDate()+gun); return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+
+/* ---------- Kalıcı depolama: tarihe göre tek kayıt (upsert = düzenlenebilir) ---------- */
+function tumKayitlar(){ try{ return JSON.parse(localStorage.getItem("optiwork_gunler")||"{}"); }catch(e){ return {}; } }
+function kayitlariKaydet(obj){ try{ localStorage.setItem("optiwork_gunler", JSON.stringify(obj)); return true; }catch(e){ return false; } }
+
+/* ---------- Durum ---------- */
+let currentTarih = bugunISO();
+let calisiyorMu = true;
+let anaIsler = [yeniAnaIs()];
+let mesaiBaslangic = "07:00";
+let mesaiBitis = "16:00";
+
+const mainArea = document.getElementById("mainArea");
+
+/* ---------- Süre hesapları (Yasal Ara: bitiş saati 12:00'den SONRA ise 90 Dk düşülür) ---------- */
+function sureHesapla(){
+  const [bh,bm] = mesaiBaslangic.split(":").map(Number);
+  const [eh,em] = mesaiBitis.split(":").map(Number);
+  let bas = bh*60+bm, bit = eh*60+em;
+  if(bit < bas) bit += 24*60; // gece vardiyası
+  const brut = Math.max(0, bit-bas);
+  const bitSaat = eh + em/60;
+  const yasalAra = bitSaat > 12 ? 90 : 0; // 60 dk yemek + 30 dk ek dinlenme = 90 dk
+  const net = brut - yasalAra;
+  return {brut, yasalAra, net};
+}
+
+/* ---------- Bir tarihi forma yükle (yeni kayıt ya da düzenleme) ---------- */
+function tarihiYukle(iso){
+  currentTarih = iso;
+  const kayit = tumKayitlar()[iso];
+  if(kayit){
+    calisiyorMu = kayit.calisti;
+    if(kayit.calisti){
+      mesaiBaslangic = kayit.mesaiBaslangic;
+      mesaiBitis = kayit.mesaiBitis;
+      anaIsler = kayit.isler.map(t => ({
+        id: uid(), kategori: t.kategori, katDiger: t.katDiger || "",
+        anaIs: t.anaIs, durum: t.durum,
+        mikrolar: t.mikrolar.map(m => ({id:uid(), isim:m.isim, tip:m.tip, sure:m.sure}))
+      }));
+    } else {
+      mesaiBaslangic = "07:00"; mesaiBitis = "16:00"; anaIsler = [yeniAnaIs()];
+    }
+  } else {
+    calisiyorMu = true; mesaiBaslangic = "07:00"; mesaiBitis = "16:00"; anaIsler = [yeniAnaIs()];
+  }
+  document.getElementById("tarihSecici").value = currentTarih;
+  document.getElementById("devamSorusu").textContent = (currentTarih === bugunISO()) ? "Bugün çalıştınız mı?" : "Seçili gün için çalıştınız mı?";
+  document.getElementById("btnEvet").classList.toggle("active", calisiyorMu);
+  document.getElementById("btnHayir").classList.toggle("active", !calisiyorMu);
+  document.getElementById("banner").innerHTML = kayit ? `<div class="banner ok">Bu tarih için kayıtlı bir çizelge yüklendi — düzenleyip tekrar kaydedebilirsiniz.</div>` : "";
+  render();
+}
+
+/* ---------- Render ---------- */
+function render(){
+  if(!calisiyorMu){
+    mainArea.innerHTML = `
+      <div class="panel">
+        <div class="info-panel">Bu tarih için izinli / çalışmıyor statüsü seçili. Herhangi bir iş beyanı gerekmez.</div>
+        <div class="footer-row"><button class="btn primary" id="btnKaydetIzinli">İzinli Olarak Kaydet</button></div>
+      </div>`;
+    document.getElementById("btnKaydetIzinli").addEventListener("click", kaydet);
+    return;
+  }
+
+  const {brut, yasalAra, net} = sureHesapla();
+
+  mainArea.innerHTML = `
+    <div class="panel">
+      <div class="subhead">DİNAMİK ÇALIŞAN PARAMETRELERİ (Öğrenme Eğrisi ve Kapasite Etkenleri)</div>
+      <div class="grid-auto">
+        <div class="field-static"><label>Tarih</label><div class="val">${trTarih(currentTarih)}</div></div>
+        <div class="field-static"><label>Ad Soyad</label><div class="val">${PROFIL.adSoyad}</div></div>
+        <div class="field-static"><label>Müdürlük / Şeflik</label><div class="val">${PROFIL.mudurluk}</div></div>
+        <div class="field-static"><label>Yönetici Adı</label><div class="val">${PROFIL.yonetici}</div></div>
+        <div class="field-static"><label>Yaş Aralığı</label><div class="val">${PROFIL.yasAraligi}</div></div>
+        <div class="field-static"><label>Cinsiyet</label><div class="val">${PROFIL.cinsiyet}</div></div>
+        <div class="field-static"><label>Görev Kıdemi</label><div class="val">${PROFIL.kidem}</div></div>
+        <div class="field-static"><label>Çalışma Modeli</label><div class="val">${PROFIL.calismaModeli}</div></div>
+        <div class="field-static"><label>Eğitim / Oryantasyon</label><div class="val">${PROFIL.egitim}</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="subhead">AKTİF GÜNLÜK ÇALIŞMA ZAMAN ARALIĞI</div>
+      <div class="time-row">
+        <div class="time-field"><label>Mesai Başlangıç</label><input type="time" id="inpBaslangic" value="${mesaiBaslangic}"></div>
+        <div class="time-field"><label>Mesai Bitiş</label><input type="time" id="inpBitis" value="${mesaiBitis}"></div>
+        <div class="metrics">
+          <div class="metric"><div class="lbl">Toplam Brüt Süre</div><div class="num" id="mBrut">${brut} Dk (${(brut/60).toFixed(1)} Sa)</div></div>
+          <div class="metric"><div class="lbl">Yasal Ara (Yemek + Dinlenme)</div><div class="num" id="mYemek">${yasalAra} Dk</div></div>
+          <div class="metric warn"><div class="lbl">Net Kapasite</div><div class="num" id="mNet">${net} Dk</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="subhead tasks">GÜNLÜK GERÇEKLEŞTİRİLEN GÖREVLER VE PARÇALI ALT ADIMLAR</div>
+      <div class="task-hdr">
+        <div>Görev Kategorisi</div><div>Ana İş Adı</div><div>Mikro Alt Adım</div>
+        <div>Tip</div><div>Süre (Dk)</div><div>İş Durumu</div><div></div>
+      </div>
+      <div id="tasksContainer"></div>
+      <div class="add-task-bar"><button class="btn primary" id="btnAnaIsEkle">+ Yeni Ana İş Ekle</button></div>
+      <div class="footer-row">
+        <div class="grand-total">Günlük Toplam Beyan: <span id="genelToplam">0</span> Dk</div>
+        <button class="btn primary" id="btnKaydet">Günlük Çizelgeyi Kaydet</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("inpBaslangic").addEventListener("change", e => { mesaiBaslangic = e.target.value; renderZaman(); });
+  document.getElementById("inpBitis").addEventListener("change", e => { mesaiBitis = e.target.value; renderZaman(); });
+  document.getElementById("btnAnaIsEkle").addEventListener("click", () => { anaIsler.push(yeniAnaIs()); render(); });
+  document.getElementById("btnKaydet").addEventListener("click", kaydet);
+
+  renderTasks();
+}
+
+function renderZaman(){
+  const {brut, yasalAra, net} = sureHesapla();
+  document.getElementById("mBrut").textContent = `${brut} Dk (${(brut/60).toFixed(1)} Sa)`;
+  document.getElementById("mYemek").textContent = `${yasalAra} Dk`;
+  document.getElementById("mNet").textContent = `${net} Dk`;
+}
+
+function renderTasks(){
+  const cont = document.getElementById("tasksContainer");
+  cont.innerHTML = anaIsler.map(task => taskHTML(task)).join("");
+  updateTotals();
+
+  cont.querySelectorAll("[data-role]").forEach(el => {
+    const role = el.dataset.role, taskId = el.dataset.task, microId = el.dataset.micro;
+    const task = anaIsler.find(t => t.id === taskId);
+
+    if(role === "kategori"){
+      el.addEventListener("change", e => {
+        task.kategori = e.target.value;
+        cont.querySelector(`.diger-wrap[data-task="${taskId}"]`).style.display = task.kategori === "Diğer" ? "block" : "none";
+      });
+    } else if(role === "katDiger"){
+      el.addEventListener("input", e => { task.katDiger = e.target.value; });
+    } else if(role === "anaIs"){
+      el.addEventListener("input", e => { task.anaIs = e.target.value; });
+    } else if(role === "durum"){
+      el.addEventListener("change", e => { task.durum = e.target.value; });
+    } else if(role === "mikroIsim"){
+      const m = task.mikrolar.find(x => x.id === microId);
+      el.addEventListener("input", e => { m.isim = e.target.value; });
+    } else if(role === "mikroTip"){
+      const m = task.mikrolar.find(x => x.id === microId);
+      el.addEventListener("change", e => { m.tip = e.target.value; });
+    } else if(role === "mikroSure"){
+      const m = task.mikrolar.find(x => x.id === microId);
+      el.addEventListener("input", e => { m.sure = Math.max(0, parseInt(e.target.value || 0,10)); updateTotals(); });
+    } else if(role === "delMikro"){
+      el.addEventListener("click", () => {
+        if(task.mikrolar.length > 1){ task.mikrolar = task.mikrolar.filter(x => x.id !== microId); renderTasks(); }
+      });
+    } else if(role === "addMikro"){
+      el.addEventListener("click", () => { task.mikrolar.push(yeniMikro()); renderTasks(); });
+    } else if(role === "delTask"){
+      el.addEventListener("click", () => {
+        if(anaIsler.length > 1){ anaIsler = anaIsler.filter(t => t.id !== taskId); renderTasks(); }
+      });
+    }
+  });
+}
+
+function taskHTML(task){
+  const microRows = task.mikrolar.map((m, j) => `
+    <div class="micro-row">
+      ${j === 0 ? `
+        <div>
+          <select data-role="kategori" data-task="${task.id}">
+            ${KATEGORILER.map(k => `<option value="${k}" ${k===task.kategori?"selected":""}>${k}</option>`).join("")}
+          </select>
+          <div class="diger-wrap diger-input" data-task="${task.id}" style="display:${task.kategori==="Diğer"?"block":"none"}">
+            <input type="text" placeholder="Niş kategori" data-role="katDiger" data-task="${task.id}" value="${escapeHtml(task.katDiger)}">
+          </div>
+        </div>
+        <div><input type="text" placeholder="Örn: Aylık Devamsızlık" data-role="anaIs" data-task="${task.id}" value="${escapeHtml(task.anaIs)}"></div>
+      ` : `<div></div><div></div>`}
+      <div><input type="text" placeholder="${j+1}. işlem" data-role="mikroIsim" data-task="${task.id}" data-micro="${m.id}" value="${escapeHtml(m.isim)}"></div>
+      <div>
+        <select data-role="mikroTip" data-task="${task.id}" data-micro="${m.id}">
+          ${TIPLER.map(t=>`<option ${m.tip===t?"selected":""}>${t}</option>`).join("")}
+        </select>
+      </div>
+      <div><input type="number" min="0" step="5" data-role="mikroSure" data-task="${task.id}" data-micro="${m.id}" value="${m.sure}"></div>
+      ${j === 0 ? `
+        <div>
+          <select data-role="durum" data-task="${task.id}">
+            ${DURUMLAR.map(d => `<option value="${d}" ${d===task.durum?"selected":""}>${d}</option>`).join("")}
+          </select>
+        </div>
+      ` : `<div></div>`}
+      <div><button class="del-btn" data-role="delMikro" data-task="${task.id}" data-micro="${m.id}" ${task.mikrolar.length<=1?"disabled":""} title="Bu mikro işi sil">✕</button></div>
+    </div>
+  `).join("");
+
+  return `
+    <div class="task-card">
+      ${microRows}
+      <div class="task-actions">
+        <button class="btn" data-role="addMikro" data-task="${task.id}">+ Mikro Alt Adım Ekle</button>
+        <button class="btn danger" data-role="delTask" data-task="${task.id}" ${anaIsler.length<=1?"disabled":""}>Bu Ana İşi Sil</button>
+        <div class="task-total">Bu işin toplam süresi: <span data-total="${task.id}">0</span> Dk</div>
+      </div>
+    </div>
+  `;
+}
+
+function updateTotals(){
+  let genel = 0;
+  anaIsler.forEach(task => {
+    const toplam = task.mikrolar.reduce((s,m) => s + (m.sure||0), 0);
+    genel += toplam;
+    const el = document.querySelector(`[data-total="${task.id}"]`);
+    if(el) el.textContent = toplam;
+  });
+  const gt = document.getElementById("genelToplam");
+  if(gt) gt.textContent = genel;
+}
+
+function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ---------- Kaydet (upsert: aynı tarih tekrar kaydedilirse üzerine yazılır = düzenleme) ---------- */
+function kaydet(){
+  const kayitlar = tumKayitlar();
+  const banner = document.getElementById("banner");
+
+  if(!calisiyorMu){
+    kayitlar[currentTarih] = {tarih: currentTarih, calisti:false, kaydedildi:new Date().toISOString()};
+    kayitlariKaydet(kayitlar);
+    banner.innerHTML = `<div class="banner ok">✓ ${trTarih(currentTarih)} için "İzinli/Gelmedi" kaydedildi.</div>`;
+    renderGecmis();
+    return;
+  }
+
+  const hatalar = [];
+  anaIsler.forEach((t, i) => {
+    if(!t.anaIs.trim()) hatalar.push(`${i+1}. ana işin adı boş bırakılamaz.`);
+    if(t.kategori === "Diğer" && !t.katDiger.trim()) hatalar.push(`${i+1}. ana iş için "Diğer" kategori adı girilmedi.`);
+    t.mikrolar.forEach((m, j) => {
+      if(!m.isim.trim()) hatalar.push(`${i+1}. ana işin ${j+1}. mikro adımının adı boş.`);
+      if(!m.sure || m.sure <= 0) hatalar.push(`${i+1}. ana işin ${j+1}. mikro adımının süresi 0'dan büyük olmalı.`);
+    });
+  });
+
+  const genel = anaIsler.reduce((s,t) => s + t.mikrolar.reduce((s2,m)=>s2+(m.sure||0),0), 0);
+
+  if(hatalar.length){
+    banner.innerHTML = `<div class="banner err">⚠️ ${hatalar[0]}${hatalar.length>1 ? ` (+${hatalar.length-1} eksik alan daha var)` : ""}</div>`;
+    return;
+  }
+  if(genel === 0){
+    banner.innerHTML = `<div class="banner err">⚠️ Toplam beyan süreniz 0 olamaz.</div>`;
+    return;
+  }
+
+  const {brut, yasalAra, net} = sureHesapla();
+  kayitlar[currentTarih] = {
+    tarih: currentTarih, calisti:true, kaydedildi:new Date().toISOString(),
+    mesaiBaslangic, mesaiBitis, brut, yasalAra, net, genelToplam: genel,
+    isler: anaIsler.map(t => ({
+      kategori: t.kategori, katDiger: t.katDiger, anaIs: t.anaIs, durum: t.durum, durumYuzde: durumYuzde(t.durum),
+      mikrolar: t.mikrolar.map(m => ({isim:m.isim, tip:m.tip, sure:m.sure}))
+    }))
+  };
+  if(kayitlariKaydet(kayitlar)){
+    banner.innerHTML = `<div class="banner ok">✓ ${trTarih(currentTarih)} için çizelge kaydedildi. Toplam: ${genel} Dk.</div>`;
+  } else {
+    banner.innerHTML = `<div class="banner err">⚠️ Kayıt sırasında bir sorun oluştu, tekrar deneyin.</div>`;
+  }
+  renderGecmis();
+}
+
+/* ---------- Toplu izin kaydı ---------- */
+document.getElementById("btnTopluKaydet").addEventListener("click", () => {
+  const bas = document.getElementById("topluBas").value;
+  const bit = document.getElementById("topluBit").value;
+  const banner = document.getElementById("banner");
+  if(!bas || !bit || bas > bit){ banner.innerHTML = `<div class="banner err">⚠️ Geçerli bir başlangıç/bitiş tarihi seçin.</div>`; return; }
+
+  const kayitlar = tumKayitlar();
+  let eklendi = 0, atlandi = 0;
+  let cur = bas;
+  while(cur <= bit){
+    const gun = new Date(cur+"T00:00:00").getDay();
+    if(gun !== 0 && gun !== 6){
+      if(kayitlar[cur] && kayitlar[cur].calisti){ atlandi++; }
+      else { kayitlar[cur] = {tarih:cur, calisti:false, kaydedildi:new Date().toISOString()}; eklendi++; }
+    }
+    cur = isoEkle(cur, 1);
+  }
+  kayitlariKaydet(kayitlar);
+  banner.innerHTML = `<div class="banner ok">✓ ${eklendi} gün "İzinli/Gelmedi" olarak işaretlendi.${atlandi?` (${atlandi} gün zaten "çalıştım" kaydı içerdiği için korundu.)`:""}</div>`;
+  renderGecmis();
+  if(bas <= currentTarih && currentTarih <= bit) tarihiYukle(currentTarih);
+});
+
+/* ---------- Geçmiş kayıtlar listesi ---------- */
+function renderGecmis(){
+  const kayitlar = tumKayitlar();
+  const tarihler = Object.keys(kayitlar).sort().reverse();
+  const alan = document.getElementById("gecmisAlan");
+  if(tarihler.length === 0){ alan.innerHTML = `<div class="caption" style="padding:0;">Henüz kayıtlı çizelge yok.</div>`; return; }
+
+  alan.innerHTML = `
+    <table class="hist">
+      <thead><tr><th>Tarih</th><th>Durum</th><th>Toplam Süre</th><th></th></tr></thead>
+      <tbody>
+        ${tarihler.map(t => {
+          const k = kayitlar[t];
+          const durum = k.calisti ? "Çalıştı" : "İzinli / Gelmedi";
+          const sure = k.calisti ? `${k.genelToplam} Dk` : "—";
+          return `<tr><td>${trTarih(t)}</td><td>${durum}</td><td>${sure}</td><td><button class="btn" data-edit="${t}">Düzenle</button></td></tr>`;
+        }).join("")}
+      </tbody>
+    </table>
+  `;
+  alan.querySelectorAll("[data-edit]").forEach(btn => {
+    btn.addEventListener("click", () => tarihiYukle(btn.dataset.edit));
+  });
+}
+
+/* ---------- Devam durumu düğmeleri (o an ekranda açık olan tarih için) ---------- */
+document.getElementById("btnEvet").addEventListener("click", () => {
+  calisiyorMu = true;
+  document.getElementById("btnEvet").classList.add("active");
+  document.getElementById("btnHayir").classList.remove("active");
+  document.getElementById("banner").innerHTML = "";
+  render();
+});
+document.getElementById("btnHayir").addEventListener("click", () => {
+  calisiyorMu = false;
+  document.getElementById("btnHayir").classList.add("active");
+  document.getElementById("btnEvet").classList.remove("active");
+  document.getElementById("banner").innerHTML = "";
+  render();
+});
+document.getElementById("tarihSecici").addEventListener("change", e => tarihiYukle(e.target.value));
+
+/* ---------- Başlangıç ---------- */
+document.getElementById("topluBas").value = isoEkle(bugunISO(), -7);
+document.getElementById("topluBit").value = isoEkle(bugunISO(), -1);
+tarihiYukle(bugunISO());
+renderGecmis();
+</script>
+</body>
+</html>

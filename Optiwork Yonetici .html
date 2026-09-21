@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>OPTIWORK | Yönetici Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#f3f3f3; --panel:#ffffff; --ink:#262626; --ink-soft:#595959;
+    --header-bg:#262626; --header-ink:#ffffff;
+    --accent:#C00000; --accent-soft:#f2dede;
+    --subhead-bg:#f2f2f2; --border:#dcdcdc; --row-bg:#fafafa;
+    --ok-bg:#E2EFDA; --ok-ink:#006100; --warn-bg:#FFF2CC; --warn-ink:#9C6500;
+    --err-bg:#FFC7CE; --err-ink:#9C0006; --info-bg:#DEEBF7; --info-ink:#005A9E;
+    --input-bg:#ffffff; --input-border:#c9c9c9;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1b1b1d; --panel:#242426; --ink:#e8e8e8; --ink-soft:#a8a8a8;
+      --header-bg:#111112; --header-ink:#f2f2f2;
+      --accent:#e0574f; --accent-soft:#3a2323;
+      --subhead-bg:#2c2c2e; --border:#3a3a3c; --row-bg:#2a2a2c;
+      --ok-bg:#1c3a26; --ok-ink:#7ddb98; --warn-bg:#3a3320; --warn-ink:#e0c060;
+      --err-bg:#3a2020; --err-ink:#f2938c; --info-bg:#20303a; --info-ink:#7fb8e0;
+      --input-bg:#1f1f21; --input-border:#4a4a4c;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1b1b1d; --panel:#242426; --ink:#e8e8e8; --ink-soft:#a8a8a8;
+    --header-bg:#111112; --header-ink:#f2f2f2;
+    --accent:#e0574f; --accent-soft:#3a2323;
+    --subhead-bg:#2c2c2e; --border:#3a3a3c; --row-bg:#2a2a2c;
+    --ok-bg:#1c3a26; --ok-ink:#7ddb98; --warn-bg:#3a3320; --warn-ink:#e0c060;
+    --err-bg:#3a2020; --err-ink:#f2938c; --info-bg:#20303a; --info-ink:#7fb8e0;
+    --input-bg:#1f1f21; --input-border:#4a4a4c;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; font-size:12.5px; line-height:1.4;}
+  .wrap{max-width:1500px; margin:0 auto; padding:14px;}
+  .titlebar{background:var(--header-bg); color:var(--header-ink); padding:10px 16px; font-weight:700; font-size:14px; letter-spacing:.3px; border-radius:3px; margin-bottom:12px; text-transform:uppercase;}
+  .titlebar.small{font-size:12px; text-transform:none; margin-top:14px;}
+  .panel{background:var(--panel); border:1px solid var(--border); border-radius:3px; margin-bottom:12px; overflow:hidden;}
+  .subhead{background:var(--subhead-bg); color:var(--ink-soft); font-weight:700; font-size:11px; padding:5px 10px; text-transform:uppercase; letter-spacing:.2px;}
+  .padbox{padding:10px 12px;}
+  .row{display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end;}
+  .field{display:flex; flex-direction:column; gap:3px; min-width:150px;}
+  .field label{font-size:10px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.2px;}
+  .field .static{font-weight:700; font-size:13px; padding-top:2px;}
+  select, input[type="text"]{background:var(--input-bg); color:var(--ink); border:1px solid var(--input-border); border-radius:3px; padding:4px 7px; font-size:12.5px; height:27px;}
+
+  .kpi-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+  @media(max-width:1000px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+  .kpi{border:1px solid var(--border); border-radius:3px; padding:10px 12px; background:var(--row-bg);}
+  .kpi .lbl{font-size:10px; color:var(--ink-soft); text-transform:uppercase;}
+  .kpi .val{font-size:19px; font-weight:700; margin-top:3px;}
+  .badge{display:inline-block; padding:2px 8px; border-radius:3px; font-weight:700; font-size:11px;}
+  .badge.ok{background:var(--ok-bg); color:var(--ok-ink);}
+  .badge.warn{background:var(--warn-bg); color:var(--warn-ink);}
+  .badge.err{background:var(--err-bg); color:var(--err-ink);}
+  .badge.info{background:var(--info-bg); color:var(--info-ink);}
+
+  table{width:100%; border-collapse:collapse; font-size:11.5px;}
+  thead th{background:var(--accent); color:#fff; padding:6px 7px; text-align:left; position:sticky; top:0; white-space:nowrap;}
+  tbody td{padding:5px 7px; border-bottom:1px solid var(--border); white-space:nowrap;}
+  tbody tr:nth-child(even){background:var(--row-bg);}
+  .table-scroll{overflow-x:auto; max-height:420px; overflow-y:auto;}
+  .tbl-note{padding:6px 12px; font-size:10.5px; color:var(--ink-soft);}
+
+  .grid2{display:grid; grid-template-columns:1.4fr 1fr; gap:12px;}
+  @media(max-width:1100px){.grid2{grid-template-columns:1fr;}}
+  .krono-table td{padding:6px 8px; border:1px solid var(--border);}
+  .krono-table td.lbl{background:var(--subhead-bg); font-weight:600; width:55%;}
+  .krono-table td.val{text-align:center; font-weight:700;}
+  .krono-hl td{background:var(--header-bg); color:#fff;}
+
+  .radar-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media(max-width:900px){.radar-grid{grid-template-columns:1fr;}}
+  .radar-list{max-height:260px; overflow-y:auto;}
+  .radar-item{display:flex; justify-content:space-between; padding:5px 10px; border-bottom:1px solid var(--border); font-size:11.5px;}
+
+  .demo-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  @media(max-width:1000px){.demo-grid{grid-template-columns:1fr;}}
+  .bar-row{display:grid; grid-template-columns:100px 1fr 40px; align-items:center; gap:6px; font-size:11px; margin-bottom:5px;}
+  .bar-track{background:var(--subhead-bg); border-radius:2px; height:14px; overflow:hidden;}
+  .bar-fill{background:var(--accent); height:100%;}
+  .caption{font-size:11px; color:var(--ink-soft); padding:0 12px 8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="titlebar">OPTIWORK | Yönetici Kalibrasyon ve Kategori Benchmark Ekranı</div>
+
+  <div class="panel">
+    <div class="subhead">Yetkili Onay Mercii Bilgileri ve Analiz Kapsamı</div>
+    <div class="padbox row">
+      <div class="field"><label>Yönetici Adı</label><div class="static" id="fYonetici"></div></div>
+      <div class="field"><label>Ünvan</label><div class="static">İK Çalışan Deneyimi Müdürü</div></div>
+      <div class="field"><label>Analiz Kapsamı</label><select id="scopeSelect"></select></div>
+      <div class="field"><label>Dönem</label><select id="donemSelect"></select></div>
+      <div class="field"><label id="lblDataset"></label></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="subhead">Kapsam Özeti (KPI)</div>
+    <div class="padbox kpi-grid" id="kpiGrid"></div>
+  </div>
+
+  <div class="panel">
+    <div class="subhead">Çalışan Mikro İş Beyanları ve Şeflik Benchmark Karşılaştırması</div>
+    <div class="padbox row">
+      <div class="field"><label>Sicil / İsim Ara</label><input type="text" id="anaAra" placeholder="Tüm çalışan"></div>
+      <div class="field"><label>Kategori Ara</label><select id="kategoriFiltre"></select></div>
+    </div>
+    <div class="table-scroll"><table id="anaTablo"><thead></thead><tbody></tbody></table></div>
+    <div class="tbl-note" id="anaTabloNot"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <div class="subhead">Kişi Bazlı Tempo Karşılaştırma Tablosu (Performans Skoru)</div>
+      <div class="padbox row">
+        <div class="field"><label>İsim veya ID Ara</label><input type="text" id="tempoAra" placeholder="Tüm çalışan"></div>
+        <div class="field"><label>Bulunan Kayıt</label><div class="static" id="tempoSayac">0</div></div>
+      </div>
+      <div class="table-scroll"><table id="tempoTablo"><thead></thead><tbody></tbody></table></div>
+    </div>
+
+    <div class="panel">
+      <div class="subhead">Günlük Kronometraj Özeti (Sadece Yönetici Görür)</div>
+      <div class="padbox row">
+        <div class="field"><label>Çalışan</label><select id="kronoPersonel"></select></div>
+        <div class="field"><label>Tarih</label><select id="kronoTarih"></select></div>
+      </div>
+      <div class="padbox" id="kronoIcerik"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="subhead">Aylık Verimlilik Radarı (Kapsam + Dönem Ortalaması)</div>
+    <div class="padbox radar-grid">
+      <div>
+        <div class="badge ok" style="margin-bottom:6px;">%90 ve Üzeri — Kritik Yük / Yıldız Çalışan</div>
+        <div class="radar-list" id="radarYesil"></div>
+      </div>
+      <div>
+        <div class="badge err" style="margin-bottom:6px;">%60 ve Altı — Atıl Kapasite / Gelişim Bekleyen</div>
+        <div class="radar-list" id="radarKirmizi"></div>
+      </div>
+    </div>
+    <div class="caption">%60–%90 arası sağlıklı/sürdürülebilir bölge kabul edilir ve bu listelerde gösterilmez; ana tabloda yer almaya devam eder. Ortalamalar, çalışanın o dönem fiilen çalıştığı günler üzerinden alınır; izinli günler hesaba katılmaz.</div>
+  </div>
+
+  <div class="panel">
+    <div class="subhead">Aylık Norm Kadro (FTE) Analizi</div>
+    <div class="table-scroll"><table id="fteTablo"><thead></thead><tbody></tbody></table></div>
+    <div class="caption">FTE = (Aşırı sapma hariç, dönem içi tüm işlerin Nihai Standart Süre toplamı) / (Dönemdeki İş Günü × 480 Dk). Fark = Mevcut Çalışan − Hesaplanan FTE.</div>
+  </div>
+
+  <div class="panel">
+    <div class="subhead">Demografik Karşılaştırma (Şeflik → Müdürlük → Şirket Kırılımı, Seçili Kapsama Göre)</div>
+    <div class="padbox demo-grid">
+      <div><div class="titlebar small">Yaş Aralığı</div><div id="demoYas"></div></div>
+      <div><div class="titlebar small">Cinsiyet</div><div id="demoCinsiyet"></div></div>
+      <div><div class="titlebar small">Kıdem</div><div id="demoKidem"></div></div>
+    </div>
+    <div class="caption">Değerler, o kırılımdaki çalışanın kişisel ortalama temposunun (performans skoru) ortalamasıdır. 1.00 üzeri = ortalamadan hızlı/verimli, 1.00 altı = ortalamadan yavaş.</div>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================================
+   1) SABİTLER
+===================================================================== */
+const YONETICI = {ad:"Mehmet Öztürk", unvan:"İK İş Geliştirme Müdürü"};
+
+const MUDURLUKLER = [
+  {ad:"İK Çalışan Deneyimi Müdürlüğü", sefliker:["İş Geliştirme Şefliği","İK Analitiği Şefliği","Bordro ve Yan Haklar"]},
+  {ad:"Finansal Operasyonlar Müdürlüğü", sefliker:["Muhasebe Şefliği","Bütçe & Planlama Şefliği"]}
+];
+const TUM_SEFLIKLER = MUDURLUKLER.flatMap(m => m.sefliker.map(s => ({seflik:s, mudurluk:m.ad})));
+
+const AGE_RANGES = ["20-24 Yaş","25-29 Yaş","30-34 Yaş","35-39 Yaş","40+ Yaş"];
+const GENDERS = ["Kadın","Erkek"];
+const SENIORITIES = ["0-1 Yıl (Yeni)","1-3 Yıl (Deneyimli)","3-5 Yıl (Kıdemli)","5+ Yıl (Uzman)"];
+const TITLES = ["Uzman Yrd.","Uzman","Kıdemli Uzman","Şef"];
+const TAMAMLANMA_POOL = [100,100,100,100,90,90,80,70,60,50];
+
+const CATEGORY_TASKS = {
+  "İşe Alım & Oryantasyon":[{ad:"Yeni Stajyer Sistem Kaydı",mean:30},{ad:"Aday Ön Görüşme Planlama",mean:25},{ad:"Oryantasyon Dosyası Hazırlığı",mean:40},{ad:"Referans Kontrolü Görüşmesi",mean:20}],
+  "Süreç & Sistem İyileştirme":[{ad:"Norm Kadro Model Güncellemesi",mean:90},{ad:"Dashboard Parametre Revizyonu",mean:60},{ad:"SQL Sorgu Optimizasyonu",mean:55},{ad:"Otomasyon Betiği Testi",mean:70}],
+  "İK Raporlama & Analitik":[{ad:"Aylık Devamsızlık Kontrolü",mean:65},{ad:"Haftalık İcra Kurulu Raporu",mean:65},{ad:"Aylık Sunum Raporu",mean:45},{ad:"Ücret Bandı Analizi",mean:55}],
+  "İletişim & Rutin Toplantılar":[{ad:"Birim İçi Koordinasyon Toplantısı",mean:45},{ad:"Kurum İçi E-posta Trafiği",mean:35},{ad:"Yönetici Bilgilendirme Notu",mean:20}]
+};
+// Test verisinde FTE panelinin üç durumu da (Dengeli / Eksik Kadro / Atıl Kapasite) gösterebilmesi için
+// şefliklere göre farklı iş yükü yoğunluğu simüle ediyoruz (gerçek veride bu çarpan olmayacak).
+const SEFLIK_YUK_CARPANI = {
+  "İş Geliştirme Şefliği": 1.9, "İK Analitiği Şefliği": 1.0, "Bordro ve Yan Haklar": 1.8,
+  "Muhasebe Şefliği": 1.0, "Bütçe & Planlama Şefliği": 0.55
+};
+
+const NICHE_POOL = [
+  {ad:"Özel SPK Denetim Raporu Hazırlığı",mean:120},
+  {ad:"Kurumsal Birleşme Durum Tespit Analizi",mean:150},
+  {ad:"ISO Belgelendirme Ön Hazırlığı",mean:110},
+  {ad:"Acil Kriz İletişim Planı Güncellemesi",mean:90},
+  {ad:"Yönetim Kurulu Özel Sunum Tasarımı",mean:130}
+];
+
+const MONTHS = [
+  {year:2026, monthIndex:6, label:"Temmuz 2026"},
+  {year:2026, monthIndex:7, label:"Ağustos 2026"},
+  {year:2026, monthIndex:8, label:"Eylül 2026"}
+];
+
+const FIRST_F = ["Selin","Ayşe","Canan","Elif","Zeynep","Merve","Deniz","Pınar","Gizem","Burcu","Ece","İrem"];
+const FIRST_M = ["Ahmet","Mehmet","Burak","Emre","Kemal","Serkan","Onur","Barış","Cem","Hakan","Kaan","Tolga"];
+const LAST = ["Yılmaz","Demir","Şahin","Öztürk","Yıldız","Çelik","Aydın","Arslan","Doğan","Kaya","Koç","Aksoy"];
+
+/* =====================================================================
+   2) YARDIMCI FONKSİYONLAR
+===================================================================== */
+// Sabit tohumlu (seeded) rastgele üreteç: sayfa her açıldığında AYNI test verisi üretilir,
+// böylece formülleri farklı zamanlarda test ederken veri kayıp/değişken olmaz
+// (Python koddaki np.random.seed(42) karşılığı).
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rnd = mulberry32(20260917);
+const uid = () => "r_"+rnd().toString(36).slice(2,10);
+const choice = arr => arr[Math.floor(rnd()*arr.length)];
+const randInt = (a,b) => Math.floor(a+rnd()*(b-a+1));
+const mean = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+const sum = arr => arr.reduce((a,b)=>a+b,0);
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+function gauss(m,sd){ let u=1-rnd(), v=rnd(); let z=Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); return m+z*sd; }
+function pad2(n){ return String(n).padStart(2,"0"); }
+function toISO(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+function toTR(iso){ const [y,m,d]=iso.split("-"); return `${d}.${m}.${y}`; }
+function randTime(h1,m1,h2,m2){ const t1=h1*60+m1, t2=h2*60+m2; const t=randInt(t1,t2); return pad2(Math.floor(t/60))+":"+pad2(t%60); }
+function businessDaysOfMonth(year, monthIndex){
+  const days=[]; const d=new Date(year,monthIndex,1);
+  while(d.getMonth()===monthIndex){ const wd=d.getDay(); if(wd!==0 && wd!==6) days.push(new Date(d)); d.setDate(d.getDate()+1); }
+  return days;
+}
+function classifySapma(sapma){
+  if(sapma>200 || sapma<-80) return "AŞIRI SAPMA! (Hatalı Giriş)";
+  if(sapma>75 || sapma<-50) return "İncelenebilir";
+  return "Sorun Yok";
+}
+function fmtPct(n){ return (n>=0?"+":"") + n.toFixed(1) + "%"; }
+function fmt0(n){ return Math.round(n).toLocaleString("tr-TR"); }
+function fmt2(n){ return n.toFixed(2); }
+function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* =====================================================================
+   3) SENTETİK TEST VERİSİ ÜRETİMİ
+   (1000+ kişilik gerçek veri geldiğinde motor değişmeden çalışır;
+   tarayıcı performansı için burada ~70 kişi x 3 ay simüle edildi.)
+===================================================================== */
+let EMPLOYEES = [], TASKS = [], ATTEND = {}, EMP_BY_ID = {};
+
+function uretVeri(){
+  let sicil = 10001;
+  MUDURLUKLER.forEach(md => md.sefliker.forEach(sef => {
+    const n = 10;
+    for(let k=0;k<n;k++){
+      const cinsiyet = choice(GENDERS);
+      const ad = choice(cinsiyet==="Kadın"?FIRST_F:FIRST_M) + " " + choice(LAST);
+      EMPLOYEES.push({
+        id: sicil++, ad, mudurluk: md.ad, seflik: sef, unvan: choice(TITLES),
+        yas: choice(AGE_RANGES), cinsiyet, kidem: choice(SENIORITIES),
+        tempoBias: clamp(gauss(1,0.12), 0.72, 1.3)
+      });
+    }
+  }));
+  EMP_BY_ID = Object.fromEntries(EMPLOYEES.map(e=>[e.id,e]));
+
+  const nichePool = NICHE_POOL.slice();
+
+  MONTHS.forEach(month => {
+    const days = businessDaysOfMonth(month.year, month.monthIndex);
+    EMPLOYEES.forEach(emp => {
+      days.forEach(day => {
+        const dateStr = toISO(day);
+        const key = emp.id+"_"+dateStr;
+        const present = rnd() < 0.93;
+        if(!present){ ATTEND[key] = {calisti:false}; return; }
+
+        const bas = randTime(7,45,9,0);
+        const bit = rnd()<0.04 ? randTime(11,0,11,55) : randTime(16,30,18,15);
+        ATTEND[key] = {calisti:true, bas, bit};
+
+        const taskCount = randInt(5,9);
+        for(let t=0;t<taskCount;t++){
+          let kategori, anaIs, trueMean;
+          if(rnd()<0.06){
+            kategori = "Diğer";
+            if(nichePool.length>0 && rnd()<0.5){
+              const item = nichePool.pop(); anaIs=item.ad; trueMean=item.mean;
+            } else { anaIs="Özel Talep İşlemi"; trueMean=50; }
+          } else {
+            kategori = choice(Object.keys(CATEGORY_TASKS));
+            const item = choice(CATEGORY_TASKS[kategori]); anaIs=item.ad; trueMean=item.mean;
+          }
+          const tamamlanma = choice(TAMAMLANMA_POOL);
+          const beklenen = trueMean*(tamamlanma/100);
+          const yukCarpani = SEFLIK_YUK_CARPANI[emp.seflik] || 1.0;
+          let beyan = Math.max(5, Math.round(beklenen*emp.tempoBias*yukCarpani*gauss(1,0.15)));
+          if(rnd()<0.012){ beyan = Math.round(beyan*(4+rnd()*4)); } // kasıtlı aşırı sapma
+          TASKS.push({id:uid(), employeeId:emp.id, tarih:dateStr, donem:month.label, kategori, anaIs, tamamlanma, beyanDk:beyan});
+        }
+      });
+    });
+  });
+}
+uretVeri();
+
+/* =====================================================================
+   4) ÇEKİRDEK MATEMATİK (İKİ GEÇİŞLİ BENCHMARK — AŞIRI SAPMA KİRLİLİĞİNE KARŞI)
+===================================================================== */
+const donemCache = {};
+function computeForDonem(donemLabel){
+  if(donemCache[donemLabel]) return donemCache[donemLabel];
+  const rows = TASKS.filter(t=>t.donem===donemLabel).map(t=>Object.assign({emp:EMP_BY_ID[t.employeeId]}, t));
+
+  // --- GEÇİŞ 1: ham (kirli) ortalama ile ön sapma tespiti ---
+  const g1 = {};
+  rows.forEach(r=>{
+    r.projRaw = r.beyanDk/(r.tamamlanma/100);
+    const k = r.emp.seflik+"|"+r.anaIs;
+    (g1[k]=g1[k]||[]).push(r);
+  });
+  Object.values(g1).forEach(arr=>{
+    const nis = arr.length===1;
+    const ortRaw = mean(arr.map(x=>x.projRaw));
+    arr.forEach(r=>{
+      r.nis = nis;
+      if(nis){ r.uyari1="Niş İş (Standart)"; }
+      else {
+        const ideal1 = ortRaw*(r.tamamlanma/100);
+        const sapma1 = ideal1>0 ? ((r.beyanDk-ideal1)/ideal1*100) : 0;
+        r.uyari1 = classifySapma(sapma1);
+      }
+    });
+  });
+
+  // --- GEÇİŞ 2: "AŞIRI SAPMA" işaretli kayıtlar dışlanarak temiz ortalama ---
+  const g2 = {};
+  rows.forEach(r=>{ if(r.nis) return; if(r.uyari1==="AŞIRI SAPMA! (Hatalı Giriş)") return; const k=r.emp.seflik+"|"+r.anaIs; (g2[k]=g2[k]||[]).push(r); });
+  const cleanMean = {};
+  Object.entries(g2).forEach(([k,arr])=>{ cleanMean[k]=mean(arr.map(x=>x.projRaw)); });
+
+  rows.forEach(r=>{
+    const k = r.emp.seflik+"|"+r.anaIs;
+    if(r.nis){
+      r.seflikOrt = r.beyanDk; r.idealSure = r.beyanDk; r.sapma = 0; r.tempo = 1; r.uyari = "Niş İş (Standart)";
+    } else {
+      // temiz ortalama yoksa (o grubun tüm kayıtları aşırı sapmaysa) ham ortalamaya geri dön
+      const ort = (cleanMean[k] !== undefined) ? cleanMean[k] : mean(g1[k].map(x=>x.projRaw));
+      r.seflikOrt = ort;
+      r.idealSure = ort*(r.tamamlanma/100);
+      r.sapma = r.idealSure>0 ? ((r.beyanDk-r.idealSure)/r.idealSure*100) : 0;
+      r.tempo = r.beyanDk>0 ? (r.idealSure/r.beyanDk) : 1;
+      r.uyari = classifySapma(r.sapma);
+    }
+    r.nihaiStandartSure = r.beyanDk * r.tempo * 1.15; // PFD dahil bütçe süresi
+  });
+
+  donemCache[donemLabel] = rows;
+  return rows;
+}
+
+/* Kişi bazlı ortalama tempo (aşırı sapma hariç), performans skoru olarak kullanılır */
+function personTempoMap(donemLabel){
+  const rows = computeForDonem(donemLabel).filter(r=>r.uyari!=="AŞIRI SAPMA! (Hatalı Giriş)");
+  const byEmp = {};
+  rows.forEach(r=>{ (byEmp[r.employeeId]=byEmp[r.employeeId]||[]).push(r.tempo); });
+  const out = {};
+  Object.entries(byEmp).forEach(([id,arr])=>{ out[id]=mean(arr); });
+  return out;
+}
+
+/* Günlük kronometraj (bireysel gün için) */
+function kronometraj(empId, dateStr){
+  const att = ATTEND[empId+"_"+dateStr];
+  if(!att) return {yok:true};
+  if(!att.calisti) return {calisti:false};
+  const [bh,bm] = att.bas.split(":").map(Number);
+  const [eh,em] = att.bit.split(":").map(Number);
+  const basDk = bh*60+bm, bitDk = eh*60+em;
+  const brut = Math.max(0, bitDk-basDk);
+  const bitSaat = eh + em/60;
+  const yemek = bitSaat > 12 ? 90 : 0; // kural: bitiş 12:00'den SONRAysa yasal ara (60 yemek + 30 dinlenme = 90 Dk) düşülür
+  const net = Math.max(0, brut - yemek);
+  const pfdKesinti = net * 0.15;
+  const safKapasite = net * 0.85;
+  const gununTasklari = TASKS.filter(t=>t.employeeId===empId && t.tarih===dateStr);
+  const islerdeGecen = sum(gununTasklari.map(t=>t.beyanDk));
+  const mutabakat = safKapasite>0 ? (islerdeGecen/safKapasite*100) : 0;
+
+  // o güne ait bir aşırı sapma var mı (bilgilendirme amaçlı)
+  const donemLabel = MONTHS.find(m=> dateStr >= toISO(new Date(m.year,m.monthIndex,1)) && dateStr <= toISO(new Date(m.year,m.monthIndex+1,0)))?.label;
+  let asiriSapmaVar = false;
+  if(donemLabel){
+    const enriched = computeForDonem(donemLabel);
+    asiriSapmaVar = enriched.some(r=>r.employeeId===empId && r.tarih===dateStr && r.uyari==="AŞIRI SAPMA! (Hatalı Giriş)");
+  }
+
+  return {calisti:true, bas:att.bas, bit:att.bit, brut, yemek, net, pfdKesinti, safKapasite, islerdeGecen, mutabakat, gorevSayisi:gununTasklari.length, asiriSapmaVar};
+}
+
+/* Bir çalışanın, seçili dönemdeki çalıştığı günler üzerinden ortalama mutabakat % */
+function aylikOrtMutabakat(empId, donemLabel){
+  const month = MONTHS.find(m=>m.label===donemLabel);
+  if(!month) return null;
+  const days = businessDaysOfMonth(month.year, month.monthIndex).map(toISO);
+  const vals = [];
+  days.forEach(d=>{ const k = kronometraj(empId,d); if(k.calisti) vals.push(k.mutabakat); });
+  return vals.length ? mean(vals) : null;
+}
+
+/* Şeflik bazlı FTE */
+function fteForSeflik(seflik, donemLabel){
+  const month = MONTHS.find(m=>m.label===donemLabel);
+  const rows = computeForDonem(donemLabel).filter(r=>r.emp.seflik===seflik && r.uyari!=="AŞIRI SAPMA! (Hatalı Giriş)");
+  const isYuku = sum(rows.map(r=>r.nihaiStandartSure));
+  const gunSayisi = businessDaysOfMonth(month.year, month.monthIndex).length;
+  const kapasite1Kisi = gunSayisi*480;
+  const fte = kapasite1Kisi>0 ? isYuku/kapasite1Kisi : 0;
+  const mevcut = EMPLOYEES.filter(e=>e.seflik===seflik).length;
+  const fark = mevcut - fte;
+  let durum = "Dengeli", cls="ok";
+  if(fark < -0.5){ durum="Eksik Kadro"; cls="err"; }
+  else if(fark > 0.5){ durum="Atıl Kapasite"; cls="warn"; }
+  return {seflik, mevcut, isYuku, kapasite1Kisi, fte, fark, durum, cls};
+}
+
+/* =====================================================================
+   5) KAPSAM (SCOPE) YARDIMCILARI
+===================================================================== */
+function parseScope(v){
+  if(v==="sirket") return {level:"sirket"};
+  if(v.startsWith("mud:")) return {level:"mudurluk", value:v.slice(4)};
+  return {level:"seflik", value:v.slice(4)};
+}
+function employeesInScope(scope){
+  if(scope.level==="sirket") return EMPLOYEES;
+  if(scope.level==="mudurluk") return EMPLOYEES.filter(e=>e.mudurluk===scope.value);
+  return EMPLOYEES.filter(e=>e.seflik===scope.value);
+}
+function sefliklerInScope(scope){
+  if(scope.level==="sirket") return TUM_SEFLIKLER.map(s=>s.seflik);
+  if(scope.level==="mudurluk") return TUM_SEFLIKLER.filter(s=>s.mudurluk===scope.value).map(s=>s.seflik);
+  return [scope.value];
+}
+
+/* =====================================================================
+   6) UI KURULUMU
+===================================================================== */
+document.getElementById("fYonetici").textContent = YONETICI.ad;
+
+const scopeSelect = document.getElementById("scopeSelect");
+scopeSelect.innerHTML = `<option value="sirket">Şirket Geneli</option>` +
+  `<optgroup label="Müdürlükler">` + MUDURLUKLER.map(m=>`<option value="mud:${m.ad}">${m.ad}</option>`).join("") + `</optgroup>` +
+  `<optgroup label="Şeflikler">` + TUM_SEFLIKLER.map(s=>`<option value="sef:${s.seflik}">${s.seflik}</option>`).join("") + `</optgroup>`;
+scopeSelect.value = "sef:İş Geliştirme Şefliği";
+
+const donemSelect = document.getElementById("donemSelect");
+donemSelect.innerHTML = MONTHS.map(m=>`<option value="${m.label}">${m.label}</option>`).join("");
+donemSelect.value = "Eylül 2026";
+
+document.getElementById("lblDataset").innerHTML = `<span style="color:var(--ink-soft); text-transform:uppercase; font-size:10px;">Test Veri Seti</span><div class="static" style="font-size:11.5px;">${EMPLOYEES.length} çalışan · ${TASKS.length.toLocaleString("tr-TR")} iş kaydı · 3 ay</div>`;
+
+const kategoriFiltre = document.getElementById("kategoriFiltre");
+kategoriFiltre.innerHTML = `<option value="">Tüm Kategoriler</option>` + Object.keys(CATEGORY_TASKS).concat(["Diğer"]).map(k=>`<option>${k}</option>`).join("");
+
+/* =====================================================================
+   7) RENDER
+===================================================================== */
+function currentScope(){ return parseScope(scopeSelect.value); }
+function currentDonem(){ return donemSelect.value; }
+
+function renderAll(){
+  renderKPI();
+  renderAnaTablo();
+  renderTempoTablo();
+  renderKronoSelectors();
+  renderKrono();
+  renderRadar();
+  renderFTE();
+  renderDemografi();
+}
+
+function renderKPI(){
+  const scope = currentScope(), donem = currentDonem();
+  const emps = employeesInScope(scope);
+  const empIds = new Set(emps.map(e=>e.id));
+  const rows = computeForDonem(donem).filter(r=>empIds.has(r.employeeId));
+  const toplamEfor = sum(rows.map(r=>r.beyanDk));
+  const asiriSayisi = rows.filter(r=>r.uyari==="AŞIRI SAPMA! (Hatalı Giriş)").length;
+
+  const seflikler = sefliklerInScope(scope);
+  const fteList = seflikler.map(s=>fteForSeflik(s, donem));
+  const toplamFte = sum(fteList.map(f=>f.fte));
+  const toplamMevcut = sum(fteList.map(f=>f.mevcut));
+  const fark = toplamMevcut - toplamFte;
+  let durum="Dengeli", cls="ok";
+  if(fark < -0.5){ durum="Eksik Kadro"; cls="err"; } else if(fark>0.5){ durum="Atıl Kapasite"; cls="warn"; }
+
+  document.getElementById("kpiGrid").innerHTML = `
+    <div class="kpi"><div class="lbl">Dönem Toplam Efor</div><div class="val">${fmt0(toplamEfor)} Dk</div></div>
+    <div class="kpi"><div class="lbl">Mevcut Çalışan Sayısı</div><div class="val">${toplamMevcut}</div></div>
+    <div class="kpi"><div class="lbl">Hesaplanan Norm Kadro (FTE)</div><div class="val">${fmt2(toplamFte)}</div></div>
+    <div class="kpi"><div class="lbl">Kadro Durumu</div><div class="val"><span class="badge ${cls}">${durum} (${fark>=0?"+":""}${fmt2(fark)})</span></div></div>
+    ${asiriSayisi>0 ? `<div class="kpi" style="grid-column:1/-1;"><span class="badge err">⚠ ${asiriSayisi} kayıtta aşırı sapma tespit edildi</span> — bu kayıtlar benchmark, tempo ve FTE hesaplarına dahil edilmedi, düzeltilmeden ana metrikleri etkilemez.</div>` : ""}
+  `;
+}
+
+function renderAnaTablo(){
+  const scope = currentScope(), donem = currentDonem();
+  const emps = employeesInScope(scope);
+  const empIds = new Set(emps.map(e=>e.id));
+  let rows = computeForDonem(donem).filter(r=>empIds.has(r.employeeId));
+
+  const kat = kategoriFiltre.value;
+  if(kat) rows = rows.filter(r=>r.kategori===kat);
+  const ara = document.getElementById("anaAra").value.trim().toLowerCase();
+  if(ara){
+    rows = rows.filter(r => r.emp.ad.toLowerCase().includes(ara) || String(r.employeeId).includes(ara));
+  }
+  rows = rows.slice().sort((a,b)=> b.tarih.localeCompare(a.tarih));
+
+  const gosterilen = rows.slice(0,250);
+  const thead = `<tr><th>Tarih</th><th>Sicil</th><th>Çalışan Adı</th><th>Şeflik</th><th>İş Kategorisi</th><th>Ana İş Tanımı</th><th>Beyan (Dk)</th><th>Şeflik Kategori Ort. (Dk)</th><th>Sapma (%)</th><th>Tempo</th><th>Sistem Uyarısı</th></tr>`;
+  const tbody = gosterilen.map(r=>{
+    let cls = "";
+    if(r.uyari==="AŞIRI SAPMA! (Hatalı Giriş)") cls="err";
+    else if(r.uyari==="İncelenebilir") cls="warn";
+    else if(r.uyari==="Niş İş (Standart)") cls="info";
+    else cls="ok";
+    return `<tr>
+      <td>${toTR(r.tarih)}</td><td>${r.employeeId}</td><td>${escapeHtml(r.emp.ad)}</td><td>${escapeHtml(r.emp.seflik)}</td>
+      <td>${escapeHtml(r.kategori)}</td><td>${escapeHtml(r.anaIs)}</td><td>${fmt0(r.beyanDk)}</td><td>${r.nis?"—":fmt0(r.seflikOrt)}</td>
+      <td>${r.nis?"—":fmtPct(r.sapma)}</td><td>${fmt2(r.tempo)}</td><td><span class="badge ${cls}">${r.uyari}</span></td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("anaTablo").innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
+  document.getElementById("anaTabloNot").textContent = `${rows.length} kayıttan ${gosterilen.length} tanesi gösteriliyor (en yeni tarih önce).`;
+}
+
+function renderTempoTablo(){
+  const scope = currentScope(), donem = currentDonem();
+  const emps = employeesInScope(scope);
+  const perTempo = personTempoMap(donem);
+
+  // referans ortalamalar (kapsamdan bağımsız, her zaman tüm şirket üzerinden)
+  const allPersonTempo = personTempoMap(donem);
+  const seflikOrt = {}, mudurlukOrt = {};
+  TUM_SEFLIKLER.forEach(s=>{
+    const ids = EMPLOYEES.filter(e=>e.seflik===s.seflik).map(e=>e.id).filter(id=>allPersonTempo[id]!==undefined);
+    seflikOrt[s.seflik] = mean(ids.map(id=>allPersonTempo[id]));
+  });
+  MUDURLUKLER.forEach(m=>{
+    const ids = EMPLOYEES.filter(e=>e.mudurluk===m.ad).map(e=>e.id).filter(id=>allPersonTempo[id]!==undefined);
+    mudurlukOrt[m.ad] = mean(ids.map(id=>allPersonTempo[id]));
+  });
+  const sirketIds = EMPLOYEES.map(e=>e.id).filter(id=>allPersonTempo[id]!==undefined);
+  const sirketOrt = mean(sirketIds.map(id=>allPersonTempo[id]));
+
+  let list = emps.filter(e=>perTempo[e.id]!==undefined).map(e=>({
+    e, tempo: perTempo[e.id], seflikOrt: seflikOrt[e.seflik], mudurlukOrt: mudurlukOrt[e.mudurluk], sirketOrt
+  }));
+
+  const ara = document.getElementById("tempoAra").value.trim().toLowerCase();
+  if(ara) list = list.filter(x=>x.e.ad.toLowerCase().includes(ara) || String(x.e.id).includes(ara));
+  list.sort((a,b)=> b.tempo - a.tempo);
+
+  document.getElementById("tempoSayac").textContent = list.length;
+  const thead = `<tr><th>İsim</th><th>ID</th><th>Şeflik</th><th>Ünvan</th><th>Ortalama Tempo</th><th>Şeflik Ort.</th><th>Müdürlük Ort.</th><th>Şirket Ort.</th></tr>`;
+  const tbody = list.map(x=>`<tr ${x.tempo>1?"style='background:var(--ok-bg)'":""}>
+    <td>${escapeHtml(x.e.ad)}</td><td>${x.e.id}</td><td>${escapeHtml(x.e.seflik)}</td><td>${escapeHtml(x.e.unvan)}</td>
+    <td><b>${fmt2(x.tempo)}</b></td><td>${fmt2(x.seflikOrt)}</td><td>${fmt2(x.mudurlukOrt)}</td><td>${fmt2(x.sirketOrt)}</td>
+  </tr>`).join("");
+  document.getElementById("tempoTablo").innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
+}
+
+function renderKronoSelectors(){
+  const scope = currentScope(), donem = currentDonem();
+  const emps = employeesInScope(scope);
+  const sel = document.getElementById("kronoPersonel");
+  const prevEmp = sel.value;
+  sel.innerHTML = emps.map(e=>`<option value="${e.id}">${escapeHtml(e.ad)} (${e.id})</option>`).join("");
+  if(emps.some(e=>String(e.id)===prevEmp)) sel.value = prevEmp;
+
+  const month = MONTHS.find(m=>m.label===donem);
+  const days = businessDaysOfMonth(month.year, month.monthIndex).map(toISO);
+  const tSel = document.getElementById("kronoTarih");
+  const prevDate = tSel.value;
+  tSel.innerHTML = days.map(d=>`<option value="${d}">${toTR(d)}</option>`).join("");
+  if(days.includes(prevDate)) tSel.value = prevDate; else tSel.value = days[days.length-1];
+}
+
+function renderKrono(){
+  const empId = Number(document.getElementById("kronoPersonel").value);
+  const dateStr = document.getElementById("kronoTarih").value;
+  if(!empId || !dateStr) return;
+  const k = kronometraj(empId, dateStr);
+  const box = document.getElementById("kronoIcerik");
+  if(!k.calisti){
+    box.innerHTML = `<div class="badge info">İzinli / Yok</div><div class="caption" style="padding:8px 0 0;">Bu çalışan seçili tarihte çalışmamıştır; gün, ortalama ve kapasite hesaplarına dahil edilmez.</div>`;
+    return;
+  }
+  let mutRenk="ok", mutYazi="Dengeli";
+  if(k.mutabakat>110){ mutRenk="err"; mutYazi="Kapasite Aşımı / Fazla Mesai"; }
+  else if(k.mutabakat<80){ mutRenk="warn"; mutYazi="Atıl Kapasite (Boş Zaman)"; }
+
+  box.innerHTML = `
+    <table class="krono-table">
+      <tr><td class="lbl">Mesai Başlangıç – Bitiş</td><td class="val">${k.bas} – ${k.bit}</td></tr>
+      <tr><td class="lbl">Toplam Brüt Süre</td><td class="val">${fmt0(k.brut)} Dk</td></tr>
+      <tr><td class="lbl">Yasal Ara — Yemek+Dinlenme (bitiş 12:00 sonrası ise)</td><td class="val">${fmt0(k.yemek)} Dk</td></tr>
+      <tr><td class="lbl">Net Bulunma Süresi</td><td class="val">${fmt0(k.net)} Dk</td></tr>
+      <tr class="krono-hl"><td>PFD (%15 Yorgunluk/İnsani İhtiyaç) Kesintisi</td><td>${fmt0(k.pfdKesinti)} Dk</td></tr>
+      <tr class="krono-hl"><td>Saf Beklenen Çalışma Süresi</td><td>${fmt0(k.safKapasite)} Dk</td></tr>
+      <tr><td class="lbl">İşlerde Geçen (Beyan Edilen) Toplam Süre</td><td class="val">${fmt0(k.islerdeGecen)} Dk (${k.gorevSayisi} görev)</td></tr>
+      <tr class="krono-hl"><td>Mutabakat / Kapasite Kullanım Oranı</td><td><span class="badge ${mutRenk}">%${k.mutabakat.toFixed(1)} — ${mutYazi}</span></td></tr>
+    </table>
+    ${k.asiriSapmaVar ? `<div class="caption" style="color:var(--err-ink);">⚠ Bu güne ait bir işte aşırı sapma tespit edildi (bkz. ana tablo); oran bu kayıttan etkilenmiş olabilir, kaydı düzeltmeden bu günü aylık ortalamalara dahil etmeyin.</div>` : `<div class="caption">İşlerde geçen süre, ana tablodaki bu güne ait mikro iş kayıtlarının otomatik toplamıdır.</div>`}
+  `;
+}
+
+function renderRadar(){
+  const scope = currentScope(), donem = currentDonem();
+  const emps = employeesInScope(scope);
+  const items = emps.map(e=>({e, ort: aylikOrtMutabakat(e.id, donem)})).filter(x=>x.ort!==null);
+  const yesil = items.filter(x=>x.ort>=90).sort((a,b)=>b.ort-a.ort);
+  const kirmizi = items.filter(x=>x.ort<=60).sort((a,b)=>a.ort-b.ort);
+
+  document.getElementById("radarYesil").innerHTML = yesil.length ? yesil.map(x=>`<div class="radar-item"><span>${escapeHtml(x.e.ad)} · ${escapeHtml(x.e.seflik)}</span><b>%${x.ort.toFixed(1)}</b></div>`).join("") : `<div class="caption">Kapsamda bu dönem için kayıt yok.</div>`;
+  document.getElementById("radarKirmizi").innerHTML = kirmizi.length ? kirmizi.map(x=>`<div class="radar-item"><span>${escapeHtml(x.e.ad)} · ${escapeHtml(x.e.seflik)}</span><b>%${x.ort.toFixed(1)}</b></div>`).join("") : `<div class="caption">Kapsamda bu dönem için kayıt yok.</div>`;
+}
+
+function renderFTE(){
+  const scope = currentScope(), donem = currentDonem();
+  const seflikler = sefliklerInScope(scope);
+  const rows = seflikler.map(s=>fteForSeflik(s, donem));
+  const thead = `<tr><th>Şeflik</th><th>Mevcut Çalışan</th><th>Aylık İş Yükü (Nihai Standart Süre, Dk)</th><th>1 Kişi Aylık Kapasitesi (Dk)</th><th>Hesaplanan FTE</th><th>Fark</th><th>Durum</th></tr>`;
+  const tbody = rows.map(r=>`<tr>
+    <td>${escapeHtml(r.seflik)}</td><td>${r.mevcut}</td><td>${fmt0(r.isYuku)}</td><td>${fmt0(r.kapasite1Kisi)}</td>
+    <td><b>${fmt2(r.fte)}</b></td><td>${r.fark>=0?"+":""}${fmt2(r.fark)}</td><td><span class="badge ${r.cls}">${r.durum}</span></td>
+  </tr>`).join("");
+  document.getElementById("fteTablo").innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
+}
+
+function barBlock(container, dataMap){
+  const max = Math.max(...Object.values(dataMap), 0.01);
+  container.innerHTML = Object.entries(dataMap).map(([k,v])=>`
+    <div class="bar-row">
+      <div>${escapeHtml(k)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(v/max*100).toFixed(0)}%"></div></div>
+      <div>${fmt2(v)}</div>
+    </div>`).join("");
+}
+
+function renderDemografi(){
+  const scope = currentScope(), donem = currentDonem();
+  const emps = employeesInScope(scope);
+  const perTempo = personTempoMap(donem);
+  const withTempo = emps.filter(e=>perTempo[e.id]!==undefined);
+
+  function grupOrt(field, dizi){
+    const out = {};
+    dizi.forEach(v=>{
+      const ids = withTempo.filter(e=>e[field]===v).map(e=>e.id);
+      if(ids.length) out[v] = mean(ids.map(id=>perTempo[id]));
+    });
+    return out;
+  }
+  barBlock(document.getElementById("demoYas"), grupOrt("yas", AGE_RANGES));
+  barBlock(document.getElementById("demoCinsiyet"), grupOrt("cinsiyet", GENDERS));
+  barBlock(document.getElementById("demoKidem"), grupOrt("kidem", SENIORITIES));
+}
+
+/* =====================================================================
+   8) OLAY BAĞLAMA
+===================================================================== */
+scopeSelect.addEventListener("change", renderAll);
+donemSelect.addEventListener("change", renderAll);
+kategoriFiltre.addEventListener("change", renderAnaTablo);
+document.getElementById("anaAra").addEventListener("input", renderAnaTablo);
+document.getElementById("tempoAra").addEventListener("input", renderTempoTablo);
+document.getElementById("kronoPersonel").addEventListener("change", renderKrono);
+document.getElementById("kronoTarih").addEventListener("change", renderKrono);
+
+renderAll();
+</script>
+</body>
+</html>
