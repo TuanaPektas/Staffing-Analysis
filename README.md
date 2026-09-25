@@ -1,6 +1,8 @@
 # Staffing-Analysis
 A web-based HR optimization tool for Staffing Analysis. Includes a daily micro-task timesheet for employees and an FTE benchmarking dashboard for managers.
 
+See [`excel-prototype/`](./excel-prototype) for the original Excel design prototype.
+
 # OPTIWORK | Staffing Analysis & Workforce Optimization
 
 OPTIWORK is a web-based HR optimization tool designed for corporate human resources departments. It measures daily employee effort and provides managers with comprehensive **FTE (Full-Time Equivalent)** and staffing benchmark analyses. 
