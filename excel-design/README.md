@@ -17,10 +17,7 @@ File: `THY_Norm_Kadro_Prototype.xlsx`
 
 > Note: sheet names and on-screen labels inside the workbook are in
 > Turkish (it was built for a Turkish-speaking HR audience); this README
-> describes it in English for the repository. A 4th sheet
-> ("Bilgilendirme" — internal author notes) was excluded from this
-> published version, as it contained draft notes not intended for public
-> sharing.
+> describes it in English for the repository.
 
 ---
 
