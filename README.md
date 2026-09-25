@@ -43,4 +43,13 @@ This project is entirely client-side.
 
 Both screens are standalone HTML files and run directly in the browser.
 
+## Excel design
+
+Before the web version was built, the screens, business rules, and
+calculation formulas were designed in Excel. All design pages and
+screenshots are in the [excel-design](./excel-design) folder.
+
+![Analytics & Charts](./excel-design/03-analytics-dashboard.png)
+
+
 
